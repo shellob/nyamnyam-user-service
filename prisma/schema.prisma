@@ -1,0 +1,60 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url = env("DATABASE_URL")
+}
+
+model User {
+    id String @id @default(uuid())
+    name String
+    email String @unique
+    passwordHash String
+    role String // "client", "restaurant", "admin"
+    phoneNumber String
+
+    sessions    UserSession[]
+    addresses   UserAddress[]
+    notifications   UserNotification[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model UserSession {
+    id  String @id @default(uuid())
+    userId  String
+    refreshToken    String @unique
+    userAgent   String?
+    ipAddress   String?
+    expiresAt   DateTime
+    createdAt   DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserAddress {
+  id        String  @id @default(uuid())
+  userId    String
+  address   String
+  city      String
+  postalCode String
+  isDefault Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  // Связь с пользователем
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserNotification {
+    id  String @id @default(uuid())
+    userId String
+    type String // "order_update", "promo", "support"
+    message String
+    isRead Boolean @default(false)
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
