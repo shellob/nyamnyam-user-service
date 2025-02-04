@@ -1,7 +1,8 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import loginController from "./adapters/http/login.controller";
 import registerController from "./adapters/http/register.controller";
-import { authenticateJWT } from "./adapters/middleware/auth.middleware";
+import { KafkaService } from "./adapters/kafka/kafka.service";
+import { JWTConsumer } from "./adapters/kafka/jwt.consumer";
 
 const app = express();
 app.use(express.json());
@@ -10,16 +11,18 @@ app.use(express.json());
 app.use("/auth", loginController);
 app.use("/auth", registerController);
 
-// 🔹 Защищённый маршрут (профиль пользователя)
-app.get("/me", authenticateJWT, async (req: Request, res: Response): Promise<void> => {
-    if (!req.user) {
-        res.status(401).json({ message: "Unauthorized" });
-        return
-    }
-    res.json({ message: "Welcome!", user: req.user });
-});
+// Инициализируем Kafka
+const kafkaService = new KafkaService();
+const jwtConsumer = new JWTConsumer(kafkaService);
+
+async function start() {
+    await kafkaService.connect();
+    await jwtConsumer.start();
+}
+
+start();
 
 const PORT = 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`User Service running on http://localhost:${PORT}`);
 });

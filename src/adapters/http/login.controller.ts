@@ -67,7 +67,7 @@ router.post("/refresh", async (req: Request, res: Response): Promise<void> => {
         res.status(400).json({ message: "Refresh token is required" });
         return
     }
-
+    
     try {
         // Проверяем, есть ли `refreshToken` в БД
         const session = await prisma.userSession.findUnique({
