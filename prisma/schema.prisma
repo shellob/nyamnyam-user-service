@@ -16,7 +16,7 @@ model User {
     phoneNumber String
 
     sessions    UserSession[]
-    addresses   UserAddress[]
+    address   String?
     notifications   UserNotification[]
 
     createdAt DateTime @default(now())
@@ -35,18 +35,18 @@ model UserSession {
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model UserAddress {
-  id        String  @id @default(uuid())
-  userId    String
-  address   String
-  city      String
-  postalCode String
-  isDefault Boolean @default(false)
-  createdAt DateTime @default(now())
+//model UserAddress {
+ // id        String  @id @default(uuid())
+ // userId    String
+ // address   String
+ // city      String
+ // postalCode String
+ // isDefault Boolean @default(false)
+  //createdAt DateTime @default(now())
 
   // Связь с пользователем
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
+ // user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+//}
 
 model UserNotification {
     id  String @id @default(uuid())

@@ -1,8 +1,8 @@
 import express from "express";
 import loginController from "./adapters/http/login.controller";
 import registerController from "./adapters/http/register.controller";
-import { KafkaService } from "./adapters/kafka/kafka.service";
-import { JWTConsumer } from "./adapters/kafka/jwt.consumer";
+import { validateToken } from "./adapters/http/validate.controller";
+import { authenticateJWT } from "./adapters/middleware/auth.middleware";
 
 const app = express();
 app.use(express.json());
@@ -10,19 +10,14 @@ app.use(express.json());
 // Подключаем контроллеры
 app.use("/auth", loginController);
 app.use("/auth", registerController);
+app.post("/auth/validate", validateToken);
 
-// Инициализируем Kafka
-const kafkaService = new KafkaService();
-const jwtConsumer = new JWTConsumer(kafkaService);
+// Пример защищённого маршрута
+app.get("/protected", authenticateJWT, (req, res) => {
+    res.json({ message: "Ты авторизован!", user: req.user });
+});
 
-async function start() {
-    await kafkaService.connect();
-    await jwtConsumer.start();
-}
-
-start();
-
-const PORT = 3000;
+const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`User Service running on http://localhost:${PORT}`);
 });

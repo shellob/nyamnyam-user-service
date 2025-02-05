@@ -1,46 +1,35 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import * as jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { KafkaService } from "../kafka/kafka.service";
+
 dotenv.config();
 
 const SECRET_KEY = process.env.SECRET_KEY || "default_secret";
 
-declare module "express" {
+// Расширяем Request для добавления `user`
+declare module "express-serve-static-core" {
     interface Request {
         user?: any;
     }
 }
 
-const kafkaService = new KafkaService();
-kafkaService.connect();
-// Middleware для проверки токена
-export async function authenticateJWT(req: Request, res: Response, next: NextFunction) {
+// Middleware для проверки JWT
+export const authenticateJWT: RequestHandler = (req, res, next) => {
     const authHeader = req.header("Authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "Unauthorized: No token provided" });
+        res.status(401).json({ message: "Unauthorized: No token provided" });
+        return; 
     }
 
     const token = authHeader.split(" ")[1];
 
     try {
-        console.log("🔹 Отправляем токен в Kafka:", token);
-        await kafkaService.sendMessage("jwt-validation", { token });
-
-        // Ожидаем ответа от UserService
-        await kafkaService.consumeMessages("jwt-validation-response", async (message) => {
-            console.log("📩 Получили ответ от UserService:", message);
-            
-            if (!message.isValid) {
-                return res.status(403).json({ message: "Forbidden: Invalid token" });
-            }
-
-            req.user = message.decoded; // Добавляем пользователя в req
-            next(); // Передаём управление дальше
-        });
-
+        const decoded = jwt.verify(token, SECRET_KEY);
+        req.user = decoded; // Добавляем пользователя в req
+        next();
     } catch (error) {
-        return res.status(500).json({ message: "Internal server error" });
+        res.status(403).json({ message: "Forbidden: Invalid token" });
+        return;
     }
-}
+};

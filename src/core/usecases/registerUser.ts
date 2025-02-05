@@ -1,6 +1,7 @@
-import {User} from "../entites/user"
-import { PrismaUserRepository } from "../../adapters/persistence/user.repository"
-import * as bcrypt from "bcrypt"
+import { User } from "../entites/user";
+import { PrismaUserRepository } from "../../adapters/persistence/user.repository";
+import * as bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
 interface RegisterUserDTO {
     name: string;
@@ -10,25 +11,26 @@ interface RegisterUserDTO {
 }
 
 export class RegisterUser {
-    private userRepository: PrismaUserRepository;
-
-    constructor (userRepository: PrismaUserRepository) {
-        this.userRepository = userRepository;
-    }
+    constructor(private readonly userRepository: PrismaUserRepository) {}
 
     async execute(dto: RegisterUserDTO): Promise<User> {
-        if (!User.validateEmail(dto.email)){
-            throw new Error("Invalid email format");
+        // 🔹 Проверяем валидность email
+        if (!User.validateEmail(dto.email)) {
+            throw new Error("❌ Invalid email format");
         }
 
+        // 🔹 Проверяем, существует ли уже пользователь с таким email
         const existingUser = await this.userRepository.findByEmail(dto.email);
         if (existingUser) {
-            throw new Error("Email already in use");
+            throw new Error("❌ Email is already in use");
         }
-        const passwordHash = await bcrypt.hash(dto.password, 12)
 
+        // 🔹 Хешируем пароль перед сохранением
+        const passwordHash = await bcrypt.hash(dto.password, 12);
+
+        // 🔹 Создаем нового пользователя
         const newUser = new User(
-            crypto.randomUUID(),
+            uuidv4(), // Генерируем UUID для пользователя
             dto.name,
             dto.email,
             passwordHash,
@@ -37,8 +39,9 @@ export class RegisterUser {
             null,
             new Date(),
             new Date()
-        )
+        );
 
-        return this.userRepository.save(newUser);
+        // 🔹 Сохраняем пользователя в базе
+        return await this.userRepository.save(newUser);
     }
 }
