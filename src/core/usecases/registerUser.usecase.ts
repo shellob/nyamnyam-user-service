@@ -1,11 +1,11 @@
 import { User } from "../entites/user";
-import { PrismaUserRepository } from "../../adapters/persistence/user.repository";
 import { RegisterUserDTO } from "../interfaces/DTO/RegisterUserDTO";
 import * as bcrypt from 'bcrypt'
 import {v4 as uuidv4} from 'uuid'
+import { IUserRepository } from "../interfaces/user.repository.interface";
 
 export class RegisterUser {
-    constructor(private readonly userRepository: PrismaUserRepository) {}
+    constructor(private readonly userRepository: IUserRepository) {}
 
     async execute(dto: RegisterUserDTO): Promise<User> {
         const exisitingUser = await this.userRepository.findByEmail(dto.email);

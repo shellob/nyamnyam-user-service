@@ -1,21 +1,9 @@
 import express from "express";
-import loginController from "./adapters/http/login.controller";
-import registerController from "./adapters/http/register.controller";
-import { validateToken } from "./adapters/http/validate.controller";
-import { authenticateJWT } from "./adapters/middleware/auth.middleware";
+import userRoutes from './user.routes'
 
 const app = express();
 app.use(express.json());
-
-// Подключаем контроллеры
-app.use("/auth", loginController);
-app.use("/auth", registerController);
-app.post("/auth/validate", validateToken);
-
-// Пример защищённого маршрута
-app.get("/protected", authenticateJWT, (req, res) => {
-    res.json({ message: "Ты авторизован!", user: req.user });
-});
+app.use(userRoutes);
 
 const PORT = 3001;
 app.listen(PORT, () => {

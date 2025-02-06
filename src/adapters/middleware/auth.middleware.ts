@@ -13,23 +13,21 @@ declare module "express-serve-static-core" {
     }
 }
 
-// Middleware для проверки JWT
-export const authenticateJWT: RequestHandler = (req, res, next) => {
+export function authenticateJWT(req: Request, res: Response, next: NextFunction): void {
     const authHeader = req.header("Authorization");
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        res.status(401).json({ message: "Unauthorized: No token provided" });
-        return; 
+        res.status(401).json({ message: "Unauthorized" });
+        return;
     }
 
     const token = authHeader.split(" ")[1];
 
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        req.user = decoded; // Добавляем пользователя в req
-        next();
-    } catch (error) {
-        res.status(403).json({ message: "Forbidden: Invalid token" });
-        return;
-    }
-};
+    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+        if (err) {
+            res.status(403).json({ message: "Forbidden: Invalid token" });
+            return;
+        }
+        req.user = decoded; // Добавляем user в req
+        next(); // Передаём управление дальше
+    });
+}

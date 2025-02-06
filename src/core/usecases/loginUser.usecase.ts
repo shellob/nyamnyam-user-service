@@ -2,9 +2,10 @@ import { User } from "../entites/user";
 import { PrismaUserRepository } from "../../adapters/persistence/user.repository";
 import * as bcrypt from 'bcrypt'
 import { LoginUserDTO } from "../interfaces/DTO/LoginUserDTO";
+import { IUserRepository } from "../interfaces/user.repository.interface";
 
 export class LoginUser {
-    constructor(private readonly userRepository: PrismaUserRepository) {}
+    constructor(private readonly userRepository: IUserRepository) {}
 
     async execute(email: string, password: string) {
         const exisitingUser =  await this.userRepository.findByEmail(email);

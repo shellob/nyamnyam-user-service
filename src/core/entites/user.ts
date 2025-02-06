@@ -76,7 +76,7 @@ export class User {
         this.updatedAt = new Date();
     }
 
-    async updateProfile(name: string, phoneNumber: string, profilePicture: string) {
+    async updateProfile(name: string, phoneNumber?: string, profilePicture?: string) {
         if (name) {
             this.name = name;
         }

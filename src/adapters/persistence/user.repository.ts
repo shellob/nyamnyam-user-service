@@ -37,7 +37,7 @@ export class PrismaUserRepository implements IUserRepository{
         const user = await this.prisma.user.findUnique({where: {id}})
         return user ? await this.mapToDomain(user) : null;
     }
-    async update(user: User, data: Partial<User>): Promise<User> {
+    async update(user: User, data?: Partial<User>): Promise<User> {
         const updatedUser = await this.prisma.user.update({
             where: {id: user.id},
             data: {
@@ -73,5 +73,12 @@ export class PrismaUserRepository implements IUserRepository{
             prismaUser.deletedAt ?? null
         );
     }
+    async clearRefreshToken(userId: string): Promise<void> {
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { sessions: { deleteMany: {} } } // Удаляем все сессии
+        });
+    }
+    
     
 }
