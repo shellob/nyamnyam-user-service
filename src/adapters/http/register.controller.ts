@@ -1,10 +1,11 @@
 import express, {Request, Response} from "express"
-import { PrismaUserRepository } from "../persistence/user.repository"
-import { RegisterUser } from "../../core/usecases/registerUser"
+import { PrismaUserRepository } from "../persistence/user.repository";
+import { RegisterUser } from "../../core/usecases/registerUser.usecase"
+import { PrismaClient } from "@prisma/client";
 
-const router = express.Router()
-
-const userRepository = new PrismaUserRepository();
+const router = express.Router();
+const prisma = new PrismaClient();
+const userRepository = new PrismaUserRepository(prisma);
 const registerUser = new RegisterUser(userRepository);
 
 router.post("/register", async(req: Request, res: Response) => {

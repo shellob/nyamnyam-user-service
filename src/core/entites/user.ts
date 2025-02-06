@@ -1,45 +1,92 @@
-export type UserRole = "client" | "restaurant" | "admin";
-
+import { UserRole } from "@prisma/client";
+import * as bcrypt from 'bcrypt'
+import {v4 as uuidv4} from 'uuid'
 export class User {
-    public readonly id: string;
-    public readonly createdAt: Date;
-    public readonly updatedAt: Date;
-
     constructor(
-        id: string,
+        public id: string,
         public name: string,
         public email: string,
-        public passwordHash: string,
+        private passwordHash: string,
         public role: UserRole,
-        public phoneNumber: string,
-        public address: string | null,
-        createdAt: Date,
-        updatedAt: Date
-    ) {
-        this.id = id;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        public phoneNumber?: string,
+        public profilePicture?: string, 
+        public isActive: boolean = true,
+        public createdAt: Date = new Date(),
+        public updatedAt: Date = new Date(),
+        public deletedAt?: Date | null
+
+    ) {}
+
+    static validateEmail(email: string):boolean {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     }
 
-    static validateEmail(email: string): boolean {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    active() {
+        this.isActive = true;
+        this.deletedAt = null;
+        this.updatedAt = new Date();
     }
 
-    hasRole(role: UserRole): boolean {
-        return this.role === role;
-    }
-
-    updateAddress(newAddress: string): void {
-        if (this.role !== "client") {
-            throw new Error("Only clients can update their address.");
+    static async createNewUser(
+        name: string,
+        email: string,
+        password: string,
+        role: UserRole,
+        phoneNumber?: string,
+        profilePicture?: string,
+    ): Promise<User> {
+        if(!this.validateEmail(email)) {
+            throw new Error("Invalide email format");
         }
-        this.address = newAddress;
+
+        const passwordHash = await bcrypt.hash(password, 12);
+
+        return new User(
+            uuidv4(),
+            name,
+            email,
+            passwordHash,
+            role,
+            phoneNumber,
+            profilePicture,
+            true,
+            new Date(),
+            new Date(),
+            null
+        )
     }
 
-    updatePhoneNumber(newPhoneNumber: string): void {
-        if (!/^\+?\d{10,15}$/.test(newPhoneNumber)) {
-            throw new Error("Invalid phone number format");
+    deactive() {
+        this.isActive = false;
+        this.updatedAt = new Date();
+        this.deletedAt = new Date();
+    }
+
+    isDeleted() {
+        return !!this.deletedAt;
+    }
+
+    async checkPassword(password: string): Promise<boolean> {
+        return await bcrypt.compare(password, this.passwordHash);
+    }
+
+    async changePassword(newPassword: string) {
+        this.passwordHash = await bcrypt.hash(newPassword, 12);
+        this.updatedAt = new Date();
+    }
+
+    async updateProfile(name: string, phoneNumber: string, profilePicture: string) {
+        if (name) {
+            this.name = name;
         }
-        this.phoneNumber = newPhoneNumber;
+        if (phoneNumber) {
+            this.phoneNumber = phoneNumber;
+        }
+        if(profilePicture) {
+            this.profilePicture = profilePicture;
+        }
+
+        this.updatedAt = new Date();
     }
 }
