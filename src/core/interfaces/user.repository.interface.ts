@@ -6,5 +6,5 @@ export interface IUserRepository {
     findById(id: string): Promise<User | null>,
     update(user: User, data?: Partial<User>): Promise<User>,
     delete(id: string): Promise<void>,
-    clearRefreshToken(userId: string): Promise<void>;
+    clearRefreshToken(userId: string): Promise<void>,
 }

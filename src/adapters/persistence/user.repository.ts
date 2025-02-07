@@ -79,6 +79,6 @@ export class PrismaUserRepository implements IUserRepository{
             data: { sessions: { deleteMany: {} } } // Удаляем все сессии
         });
     }
-    
+
     
 }

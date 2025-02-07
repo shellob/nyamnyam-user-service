@@ -14,7 +14,7 @@ export class RegisterController {
 
     async register(req: Request, res: Response) {
         try {
-            const { name, email, password, role, phoneNumber, profilePicture } = req.body;
+            const { name, email, password, role, phoneNumber} = req.body;
 
             if (!email || !password || !name || !role) {
                 return res.status(400).json({ message: "Missing required fields" });
